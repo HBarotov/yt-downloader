@@ -12,23 +12,24 @@ Uses threading to speed up downloads.
          git clone https://github.com/HBarotov/yt-downloader.git
   
 2. Create a new virtual environment and activate it:
-   - Using ```venv``` (Python 3.3+):
+
+   Use ```venv``` (Python 3.3+):
    
    ------------
          python -m venv .venv
 
-   - Activate on Windows:
+   Activate on Windows:
 
    ------------
          .venv\Scripts\Activate.ps1
 
-   - Activate on Linux/macOS:
+   Activate on Linux/macOS:
 
    ------------
          source .venv/bin/activate
-3. Install the required packages:
+4. Install the required packages:
 
    ------------
          pip install -r requirements.txt
 
-4. Run the downloader.py
+5. Run the downloader.py
