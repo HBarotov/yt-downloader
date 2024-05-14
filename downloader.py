@@ -6,12 +6,15 @@ Download Videos or Playlists
 import concurrent.futures
 import os
 import sys
+import time
 
 import pyinputplus as pyinput
 from pytube import Playlist as PT
 from pytube import YouTube as YT
 from pytube.cli import on_progress
 from pytube.innertube import _default_clients
+
+f1 = time.perf_counter()
 
 # Bypassing AgeRestrictedError
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
@@ -52,7 +55,7 @@ class Video:
         return pyinput.inputMenu(resolutions, prompt=prompt, numbered=True, blank=True)
 
     def get_size(self, video):
-        return video // (1024**2)
+        return round(video / (1024**2), 2)
 
     def download_video(self):
         yt = YT(link, on_progress_callback=on_progress)
@@ -84,7 +87,7 @@ class Playlist(Video):
         super().__init__(link)
         self.folder = folder
 
-    def convert_to_folder(self, string):
+    def convert_to_valid_name(self, string):
         filename = "".join(c for c in string if c.isalnum() or c in "-_. ")
         return os.path.splitext(filename)[0]
 
@@ -95,7 +98,7 @@ class Playlist(Video):
     def prepare_metadata(self):
         yt_playlist = PT(self.link)
         title = yt_playlist.title
-        folder = self.convert_to_folder(string=title)
+        folder = self.convert_to_valid_name(string=title)
         folder = self.create_folder(folder=folder)
         self.folder = folder
         total_video_count = len(yt_playlist.videos)
@@ -103,7 +106,7 @@ class Playlist(Video):
 
     def download_playlist(self, video_url):
         yt = YT(video_url, on_progress_callback=on_progress)
-        print(">>> Downloading:", yt.title)
+        print(f">>> Downloading: {yt.title}")
         stream = yt.streams.get_highest_resolution()
         video_size = self.get_size(stream.filesize)
         print(f"Size: {video_size}MB")
@@ -128,3 +131,6 @@ if __name__ == "__main__":
 
     else:
         print("Please, choose a valid option.")
+
+f2 = time.perf_counter()
+print(f"Script finished in {round(f2-f1, 2)} second(s)")
