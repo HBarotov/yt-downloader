@@ -50,7 +50,7 @@ class Video:
 
     def write_to_csv(self, title):
         log = [self.get_current_time(), title, self.link]
-        with open("log.csv", "a", encoding="utf-8", newline="") as f:
+        with open("history.csv", "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(log)
 
