@@ -1,8 +1,8 @@
 # Download YouTube videos from CLI
 
 ## Description
-Supports both YouTube videos and playlists. Enables choosing resolutions for video downloads. Automatically chooses the highest resolution available for playlists.
-Uses threading to speed up downloads.
+Supports both YouTube videos and playlists. Automatically chooses the highest resolution available for videos and playlists.
+Uses threading to speed up downloads. Also adds history to the log.csv file.
 
 
 ## Installation
