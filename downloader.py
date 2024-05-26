@@ -1,11 +1,12 @@
-""""
+""" "
 YouTube Video Downloader
 Download Videos or Playlists
 """
 
 import concurrent.futures
+import csv
+import datetime
 import os
-import sys
 import time
 
 import pyinputplus as pyinput
@@ -32,60 +33,46 @@ print(CHOICE)
 class Video:
     def __init__(self, link):
         self.link = link
+        self.folder = self.create_folder()
 
-    def create_folder(self, folder="Video_Downloads"):
+    def create_folder(self, folder="Downloads"):
         os.makedirs(folder, exist_ok=True)
         print(f'>>> Saving to folder "{folder}" at {WORKING_DIR}')
         return os.path.join(WORKING_DIR, folder)
 
-    def get_resolutions(self, video):
-        resolutions = []
-        for stream in video.streams.filter(progressive=True):
-            resolution = stream.resolution
-            if resolution is None:
-                continue
-            resolutions.append(resolution)
-
-        if resolutions:
-            return sorted(set(resolutions), key=lambda x: int(x.split("p")[0]))
-        return None
-
-    def choose_resolution(self, resolutions):
-        prompt = ">>> Choose a video quality: \n"
-        return pyinput.inputMenu(resolutions, prompt=prompt, numbered=True, blank=True)
-
     def get_size(self, video):
         return round(video / (1024**2), 2)
 
-    def download_video(self):
+    def get_current_time(self):
+        now = datetime.datetime.now()
+        format = "%d/%m/%Y %H:%M:%S"
+        return now.strftime(format)
+
+    def write_to_csv(self, title):
+        log = [self.get_current_time(), title, self.link]
+        with open("log.csv", "a", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(log)
+
+    def download_video(self, link):
         yt = YT(link, on_progress_callback=on_progress)
-        title = yt.title
-        folder = self.create_folder()
+        stream = yt.streams.get_highest_resolution()
 
-        resolutions = self.get_resolutions(video=yt)
+        print(f'>>> Downloading "{yt.title}"...')
+        video_size = self.get_size(video=stream.filesize)
 
-        if not resolutions:
-            print(">>> Sorry, the downloadable format is not found.")
-            sys.exit()
-        resolution = self.choose_resolution(resolutions=resolutions)
-
-        stream = yt.streams.filter(
-            file_extension="mp4", resolution=resolution, progressive=True
-        )
-        print(f'>>> Downloading "{title}" in {resolution} quality...')
-
-        video_size = self.get_size(video=stream.first().filesize)
         print(f"Size: {video_size}MB")
-        video = stream.first().download(output_path=folder)
+        video = stream.download(output_path=self.folder)
 
-        print(f'\n>>> Downloaded: "{title}" successfully!')
-        print(f'>>> Saved to "{video}"')
+        print(f'\n>>> Downloaded: "{yt.title}" successfully!')
+        print(f'>>> Saved as "{video}"')
+
+        self.write_to_csv(title=yt.title)
 
 
 class Playlist(Video):
-    def __init__(self, link, folder=None):
+    def __init__(self, link):
         super().__init__(link)
-        self.folder = folder
 
     def convert_to_valid_name(self, string):
         filename = "".join(c for c in string if c.isalnum() or c in "-_. ")
@@ -104,21 +91,12 @@ class Playlist(Video):
         total_video_count = len(yt_playlist.videos)
         print(f">>> Total videos in playlist: {total_video_count}")
 
-    def download_playlist(self, video_url):
-        yt = YT(video_url, on_progress_callback=on_progress)
-        print(f">>> Downloading: {yt.title}")
-        stream = yt.streams.get_highest_resolution()
-        video_size = self.get_size(stream.filesize)
-        print(f"Size: {video_size}MB")
-        stream.download(output_path=self.folder)
-        print(f'\n>>> Downloaded: "{yt.title}" successfully!')
-
 
 if __name__ == "__main__":
     if CHOICE == 1:
         link = pyinput.inputURL(">>> Enter YouTube Video URL: ")
         video = Video(link=link)
-        video.download_video()
+        video.download_video(link=link)
 
     elif CHOICE == 2:
         link = pyinput.inputURL(">>> Enter YouTube Playlist URL: ")
@@ -127,7 +105,7 @@ if __name__ == "__main__":
 
         playlist.prepare_metadata()
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.map(playlist.download_playlist, video_urls)
+            executor.map(playlist.download_video, video_urls)
 
     else:
         print("Please, choose a valid option.")
