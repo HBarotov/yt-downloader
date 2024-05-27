@@ -27,9 +27,9 @@ Uses threading to speed up downloads. Also adds history to the log.csv file.
 
    ------------
          source .venv/bin/activate
-4. Install the required packages:
+3. Install the required packages:
 
    ------------
          pip install -r requirements.txt
 
-5. Run the downloader.py
+4. Run the downloader.py
