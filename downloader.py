@@ -62,7 +62,7 @@ class Video:
         yt = YT(link, on_progress_callback=on_progress)
         title = yt.title
         if index:
-            title = f"#{index + 1} - {title}"
+            title = f"#{index} - {title}"
 
         stream = yt.streams.get_highest_resolution()
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         playlist.prepare_metadata()
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for index, video_url in video_urls:
-                executor.submit(playlist.download_video, video_url, index)
+                executor.submit(playlist.download_video, video_url, index + 1)
 
     else:
         print("Please, choose a valid option.")
