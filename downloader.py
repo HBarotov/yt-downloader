@@ -43,6 +43,10 @@ class Video:
     def get_size(self, video):
         return round(video / (1024**2), 2)
 
+    def convert_to_valid_name(self, string):
+        filename = "".join(c for c in string if c.isalnum() or c in "-_.# ")
+        return os.path.splitext(filename)[0]
+
     def get_current_time(self):
         now = datetime.datetime.now()
         format = "%d/%m/%Y %H:%M:%S"
@@ -54,29 +58,31 @@ class Video:
             writer = csv.writer(f)
             writer.writerow(log)
 
-    def download_video(self, link):
+    def download_video(self, link, index=None):
         yt = YT(link, on_progress_callback=on_progress)
+        title = yt.title
+        if index:
+            title = f"#{index + 1} - {title}"
+
         stream = yt.streams.get_highest_resolution()
 
-        print(f'>>> Downloading "{yt.title}"...')
+        print(f'>>> Downloading "{title}"...')
+
         video_size = self.get_size(video=stream.filesize)
-
         print(f"Size: {video_size}MB")
-        video = stream.download(output_path=self.folder)
 
-        print(f'\n>>> Downloaded: "{yt.title}" successfully!')
+        filename = self.convert_to_valid_name(f"{title}.mp4")
+        video = stream.download(output_path=self.folder, filename=filename)
+
+        print(f'\n>>> Downloaded: "{title}" successfully!')
         print(f'>>> Saved as "{video}"')
 
-        self.write_to_csv(title=yt.title)
+        self.write_to_csv(title=title)
 
 
 class Playlist(Video):
     def __init__(self, link):
         super().__init__(link)
-
-    def convert_to_valid_name(self, string):
-        filename = "".join(c for c in string if c.isalnum() or c in "-_. ")
-        return os.path.splitext(filename)[0]
 
     def get_playlist_urls(self):
         video_urls = PT(self.link).video_urls
@@ -101,11 +107,12 @@ if __name__ == "__main__":
     elif CHOICE == 2:
         link = pyinput.inputURL(">>> Enter YouTube Playlist URL: ")
         playlist = Playlist(link=link)
-        video_urls = playlist.get_playlist_urls()
+        video_urls = enumerate(playlist.get_playlist_urls())
 
         playlist.prepare_metadata()
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.map(playlist.download_video, video_urls)
+            for index, video_url in video_urls:
+                executor.submit(playlist.download_video, video_url, index)
 
     else:
         print("Please, choose a valid option.")
