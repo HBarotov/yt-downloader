@@ -44,7 +44,7 @@ class Video:
         return round(video / (1024**2), 2)
 
     def convert_to_valid_name(self, string):
-        filename = "".join(c for c in string if c.isalnum() or c in "-_.# ")
+        filename = "".join(c for c in string if c.isalnum() or c in " -_.# ")
         return os.path.splitext(filename)[0]
 
     def get_current_time(self):
