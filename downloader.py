@@ -35,7 +35,7 @@ class Video:
         self.link = link
         self.folder = self.create_folder()
 
-    def create_folder(self, folder="Downloads"):
+    def create_folder(self, folder="downloads"):
         os.makedirs(folder, exist_ok=True)
         print(f'>>> Saving to folder "{folder}" at {WORKING_DIR}')
         return os.path.join(WORKING_DIR, folder)
